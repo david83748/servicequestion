@@ -1,39 +1,53 @@
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
-const express = require('express');
-const cors = require('cors');
-
+const express = require("express");
+const { MongoClient, ObjectId } = require("mongodb");
+const cors = require("cors");
+const bodyParser = require("body-parser");
+const port = 80;
 const app = express();
-const port = 3005;
 app.use(cors());
 
-app.get('/', (req, res) => {
-        const uri = 
-        "mongodb+srv://admindavid:Vashchenko141@cluster0.xrszh.mongodb.net/?retryWrites=true&w=majority";
 
-    const client = new MongoClient(uri, { 
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-        serverApi: ServerApiVersion.v1
-    });
+app.use(bodyParser.json());
 
-    client.connect(err => {
-    const collection = client.db("Interview").collection("list");
+const uri = "mongodb+srv://admindavid:Vashchenko141@cluster0.xrszh.mongodb.net/?retryWrites=true&w=majority";
+const client = new MongoClient(uri, { 
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
     
-    collection
-        .find({})
-        .toArray()
-        .then((data) => {
-            res.send(data);
-            client.close();
-        })
-    });
-   
 });
+const collection = client.db("Interview").collection("list");
+
+app.get('/', (req, res) => {
+    client.connect((err) => {
+      collection.find({}).toArray().then((data) => {
+        res.send(data);
+      });    
+    });
+  });
+app.patch('/status', (req, res) => {  
+    client.connect(async (err) => {
+      const data = req.body;
+      const updateResult = await collection.updateOne(
+        { _id: ObjectId(data._id) },
+        { $set: { status: data.status}}
+        );
+        res.send(updateResult);
+      });
+  });
+
+  app.patch('/reset', (req, res) => {  
+    client.connect(async (err) => {
+      const data = req.body;
+      const updateResult = await collection.updateMany(
+        { status: { $gt : 0 } },
+        { $set: { status: data.status}}
+        );
+        res.send(updateResult);
+      });
+  });
 
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
 });
-
-
 

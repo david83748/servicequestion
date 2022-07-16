@@ -5,19 +5,104 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Interview Question</title>
+    <link rel="stylesheet" href="style.css">
     <script>
-        async function onInit() {
-            const b = await fetch('http://localhost:3005');
-            const a = await b.json()
-            console.log(a);
+
+        function getListWithFetch(url, route, method, data = '') {
+            if (method === 'GET') {
+                return fetch(url + '/' + route)
+                    .then((response) => {
+                        return response.json()
+                    })
+                    .then((data) => {
+                        return data;
+                    })
+            }
+            if (method === 'PATCH') {
+                return fetch(url + '/' + route, {
+                    method: method,
+                    body: JSON.stringify(data),
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                })
+            }
         }
-        onInit()
+
+        function render() {
+            getListWithFetch('http://localhost:80', '', 'GET')
+                .then((data) => {
+                    document.getElementById("wrapper").innerHTML =
+                        `
+                            <div data-status="${data[0].status}" data-questionId="${data[0]._id}" class="question">${data[0].question}</div>
+                            <div style="color: ${setColor(data[0].status)}">${data[0].status}</div><button>Разобрался</button>
+                            
+                            <div data-status="${data[1].status}" data-questionId="${data[1]._id}" class="question">${data[1].question}</div>
+                            <div style="color: ${setColor(data[0].status)}">${data[1].status}</div> 
+
+                            <div data-status="${data[2].status}" data-questionId="${data[2]._id}" class="question">${data[2].question}</div>
+                            <div style="color: ${setColor(data[0].status)}">${data[2].status}</div>
+
+                            <div data-status="${data[3].status}" data-questionId="${data[3]._id}" class="question">${data[3].question}</div>
+                            <div style="color: ${setColor(data[0].status)}">${data[3].status}</div>
+
+                            <div data-status="${data[4].status}" data-questionId="${data[4]._id}" class="question">${data[4].question}</div>
+                            <div style="color: ${setColor(data[0].status)}">${data[4].status}</div>
+
+                            <div data-status="${data[5].status}" data-questionId="${data[5]._id}" class="question">${data[5].question}</div>
+                            <div style="color: ${setColor(data[0].status)}">${data[5].status}</div>
+
+                            <div data-status="${data[6].status}" data-questionId="${data[6]._id}" class="question">${data[6].question}</div>
+                            <div style="color: ${setColor(data[0].status)}">${data[6].status}</div>`
+
+
+                })
+                .then(() => {
+                    document.querySelectorAll('.question').forEach((el) => {
+                        el.addEventListener('click', (e) => {
+                            let st
+                            if (status === "Вопрос открыт") {
+                                st = 'Разобрался'
+                            } else if (e.target.dataset.status === 'Разобрался') {
+                                st = 'Не очень'
+                            } else {
+                                st = "Вопрос открыт"
+                            }
+                            const data = {
+                                status: st,
+                                identificator: e.target.dataset.questionid
+                            }
+
+                            getListWithFetch('http://localhost:80', 'status', 'PATCH', data)
+                                .then(() => { render() })
+                        })
+                    })
+                })
+        }
+
+        function setColor(current) {
+            let style
+            switch (current) {
+                case 'Вопрос открыт':
+                    style = 'red'
+                    break
+                case 'Разобрался':
+                    style = 'green'
+                    break
+                case 'Не очень':
+                    style = 'grey'
+                    break
+                default: style = 'grey'
+            }
+            return style
+        }
+        render()
     </script>
 </head>
 
 <body>
-
+    <div id="wrapper"></div>
 </body>
 
 </html>
